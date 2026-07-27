@@ -1,0 +1,16 @@
+                              <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-4 text-[10px] font-bold uppercase tracking-wider">
+                                <span className="text-slate-400">{cls.duration_mins ? `${cls.duration_mins} mins` : 'Live Class'}</span>
+                                {(() => {
+                                  const targetTime = new Date(`${cls.meet_date}T${cls.start_time.length === 5 ? cls.start_time + ':00' : cls.start_time}`).getTime();
+                                  const diff = targetTime - Date.now();
+                                  const durationMs = (cls.duration_mins || 60) * 60 * 1000;
+                                  const canJoin = diff <= 15 * 60 * 1000 && diff >= -durationMs;
+                                  return canJoin ? (
+                                    <button onClick={() => setSelectedClass(cls)} className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm transition-all flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Join Meet &rarr;
+                                    </button>
+                                  ) : (
+                                    <span className="text-slate-400 font-medium">Available when live</span>
+                                  );
+                                })()}
+                              </div>

@@ -1,0 +1,9 @@
+  // Handlers for active class sub-view
+  const fetchClassWall = async () => {
+    try {
+      const res = await axios.get(`/api/classes/${selectedClass.id}/posts`);
+      setPosts(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };

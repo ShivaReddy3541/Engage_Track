@@ -1,0 +1,1 @@
+        const plcRes = await axios.get('/api/placements').catch(() => ({ data: [] }));

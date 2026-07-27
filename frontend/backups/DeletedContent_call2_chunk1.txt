@@ -1,0 +1,3 @@
+  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [activeClassTab, setActiveClassTab] = useState('wall'); // wall, assignments, live
+  const [searchQuery, setSearchQuery] = useState('');

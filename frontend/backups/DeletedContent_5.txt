@@ -1,0 +1,6 @@
+      {showProfileModal && (
+        <ProfileModal onClose={() => setShowProfileModal(false)} />
+      )}
+    </div>
+  );
+}

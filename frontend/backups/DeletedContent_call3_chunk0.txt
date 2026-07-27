@@ -1,0 +1,32 @@
+
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{selectedRecordedSession.subject} • {selectedRecordedSession.duration}</span>
+              </div>
+              <button 
+                onClick={() => setSelectedRecordedSession(null)}
+                className="h-8 w-8 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center transition-colors"
+              >
+                <XCircle className="h-5 w-5 text-slate-600" />
+              </button>
+            </div>
+            <div className="aspect-video bg-black relative flex flex-col items-center justify-center">
+              {/* Prototype Empty Video */}
+              <PlayCircle className="h-20 w-20 text-slate-700 animate-pulse" />
+              <p className="text-slate-500 text-xs font-bold mt-4 uppercase tracking-widest">Prototype Mode: Stream Not Available</p>
+              
+              {/* Fake Video Controls */}
+              <div className="absolute bottom-0 w-full h-12 bg-gradient-to-t from-black/80 to-transparent flex items-end px-4 pb-3">
+                <div className="w-full flex items-center gap-4">
+                  <Play className="h-4 w-4 text-white hover:text-brand-400 cursor-pointer" />
+                  <div className="flex-1 h-1 bg-slate-600 rounded-full cursor-pointer relative">
+                    <div className="absolute top-0 left-0 h-1 bg-brand-500 rounded-full w-1/3"></div>
+                  </div>
+                  <span className="text-[10px] text-white font-bold">14:05 / {selectedRecordedSession.duration}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

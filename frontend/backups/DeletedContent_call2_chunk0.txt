@@ -1,0 +1,7 @@
+import { 
+  LogOut, User, GraduationCap, LayoutGrid, CheckCircle2,
+  Calendar, FileText, Send, Video, ShieldAlert, AlertTriangle, MessageSquare, Play,
+  Download, Clock, Check, ChevronRight, Briefcase, Award, Zap, Bell, CheckSquare, Search
+} from 'lucide-react';
+import CountdownTimer from '../components/CountdownTimer';
+import ProfileModal from '../components/ProfileModal';
