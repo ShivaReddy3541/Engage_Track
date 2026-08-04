@@ -62,17 +62,34 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
   useEffect(() => {
     if (videoRef.current) {
       if (isScreenSharing && screenStreamRef.current) {
-        videoRef.current.srcObject = screenStreamRef.current;
+        if (videoRef.current.srcObject !== screenStreamRef.current) {
+          videoRef.current.srcObject = screenStreamRef.current;
+          videoRef.current.play().catch(e => {});
+        }
       } else if (localStream) {
-        videoRef.current.srcObject = localStream;
+        if (videoRef.current.srcObject !== localStream) {
+          videoRef.current.srcObject = localStream;
+          videoRef.current.play().catch(e => {});
+        } else {
+          // If already attached, just ensure it's playing
+          videoRef.current.play().catch(e => {});
+        }
       }
     }
   }, [localStream, isScreenSharing, roomState]);
+
+  const latestLocalStream = useRef(null);
+  useEffect(() => {
+    latestLocalStream.current = localStream;
+  }, [localStream]);
 
   useEffect(() => {
     return () => {
       if (ws.current) ws.current.close();
       Object.values(peerConnections.current).forEach(pc => pc.close());
+      if (latestLocalStream.current) {
+        latestLocalStream.current.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
 
@@ -115,7 +132,7 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
         joinLiveRoom();
       }
     } catch (err) {
-      if (err.response?.status === 401 || !localStorage.getItem('token')) {
+      if (err.response?.status === 401 || !sessionStorage.getItem('token')) {
         setRoomState('denied');
         setAccessMessage('🔒 Authentication Required: Please log in with your credentials to verify your student/teacher identity before joining this live classroom.');
         return;
@@ -148,7 +165,7 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
   }, [roomState]);
 
   const setupWebSocket = (meetId, stream) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/api/meet/ws/${meetId}?token=${token}`;
     ws.current = new WebSocket(wsUrl);
@@ -303,9 +320,23 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
-        if (videoRef.current) videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(e => {});
+        }
       } catch (e) {
-        console.warn("Hardware access denied or simulated:", e);
+        console.warn("Camera/Mic access denied or unavailable:", e);
+        alert("Camera failed to start! Your webcam might be in use by another app or blocked by Windows. Trying to connect with Microphone only...");
+        setVideoEnabled(false);
+        try {
+          // Fallback to audio only
+          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          setLocalStream(stream);
+          alert("Microphone connected successfully!");
+        } catch (audioErr) {
+          console.error("Audio fallback failed:", audioErr);
+          alert("Both Camera and Microphone failed. You are connected in view-only mode.");
+        }
       }
       
       setupWebSocket(meetId, stream);
@@ -565,10 +596,21 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
     }
     const nextState = !videoEnabled;
     setVideoEnabled(nextState);
+    if (localStream) {
+      localStream.getVideoTracks().forEach(t => t.enabled = nextState);
+    }
     if (!nextState && !isHostOrAdmin) {
       setIsAbsentNow(true);
     } else {
       setIsAbsentNow(false);
+    }
+  };
+
+  const toggleAudio = () => {
+    const nextState = !audioEnabled;
+    setAudioEnabled(nextState);
+    if (localStream) {
+      localStream.getAudioTracks().forEach(t => t.enabled = nextState);
     }
   };
 
@@ -681,7 +723,7 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
           </div>
 
           <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
-            {(roomState === 'denied' || !localStorage.getItem('token') || (accessMessage && accessMessage.toLowerCase().includes('authentication required'))) && (
+            {(roomState === 'denied' || !sessionStorage.getItem('token') || (accessMessage && accessMessage.toLowerCase().includes('authentication required'))) && (
               <a 
                 href="/login"
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2"
@@ -989,16 +1031,21 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
                 </div>
 
                 <div className="flex-1 flex items-center justify-center relative my-4">
-                  {videoEnabled ? (
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      muted 
-                      playsInline 
-                      className="w-full h-full object-cover rounded-xl absolute inset-0 bg-slate-950" 
-                    />
-                  ) : (
-                    <div className="text-center">
+                  <video 
+                    ref={el => {
+                      videoRef.current = el;
+                      if (el && localStream && el.srcObject !== localStream) {
+                        el.srcObject = localStream;
+                        el.play().catch(e => console.warn("AutoPlay blocked", e));
+                      }
+                    }}
+                    autoPlay 
+                    muted 
+                    playsInline 
+                    className={`w-full h-full object-cover rounded-xl absolute inset-0 bg-slate-950 ${videoEnabled ? '' : 'hidden'}`} 
+                  />
+                  {!videoEnabled && (
+                    <div className="text-center relative z-10 w-full h-full flex flex-col items-center justify-center bg-slate-900 rounded-xl">
                       <div className="h-20 w-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-2 border border-slate-700 shadow-xl">
                         <UserCheck className="h-8 w-8 text-slate-400" />
                       </div>
@@ -1273,7 +1320,7 @@ export default function OnlineMeetingRoom({ meetData, userRole, onClose, onMeeti
         {/* Center Control Buttons */}
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setAudioEnabled(!audioEnabled)}
+            onClick={toggleAudio}
             className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all shadow-md ${
               audioEnabled ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-red-500/20 text-red-500 border border-red-500/40'
             }`}

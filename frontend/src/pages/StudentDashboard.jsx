@@ -356,9 +356,16 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (user) {
+      fetchStudentDashboardData();
       fetchEnrolledClasses();
       fetchAvailableClasses();
-      fetchStudentDashboardData();
+      
+      const intervalId = setInterval(() => {
+        fetchStudentDashboardData();
+        fetchEnrolledClasses();
+        fetchAvailableClasses();
+      }, 15000);
+      return () => clearInterval(intervalId);
     }
   }, [user]);
 
@@ -704,7 +711,7 @@ export default function StudentDashboard() {
                     const now = new Date();
                     const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                     const combinedLiveMeets = [
-                      ...activeMeets.map(m => ({ ...m, name: m.topic || m.subject_name || 'Online Meet', source: 'meet' })),
+                      ...activeMeets.filter(m => !user?.section || m.section === user?.section).map(m => ({ ...m, name: m.topic || m.subject_name || 'Online Meet', source: 'meet' })),
                       ...enrolledClasses.filter(c => c.meet_date && c.start_time).map(c => ({ ...c, source: 'class' }))
                     ].filter(c => c.status !== 'completed' && c.status !== 'closed' && c.is_active !== false);
 
@@ -1156,7 +1163,7 @@ export default function StudentDashboard() {
               {/* SESSIONS TAB */}
               {activeMenu === 'sessions' && (() => {
                 const combinedLiveMeets = [
-                  ...activeMeets.map(m => ({ ...m, name: m.topic || m.subject_name || 'Online Meet', source: 'meet' })),
+                  ...activeMeets.filter(m => !user?.section || m.section === user?.section).map(m => ({ ...m, name: m.topic || m.subject_name || 'Online Meet', source: 'meet' })),
                   ...enrolledClasses.filter(c => c.meet_date && c.start_time).map(c => ({ ...c, source: 'class' }))
                 ].filter(c => c.status !== 'completed' && c.status !== 'closed' && c.is_active !== false && c.name !== 'Interactive Class Meeting');
 

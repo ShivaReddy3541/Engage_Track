@@ -1157,10 +1157,13 @@ def create_online_meet(
     meeting_id = f"MEET-{req.department}-{req.section}-{uuid.uuid4().hex[:6].upper()}"
 
     # Pre-enroll section students via roll numbers + Teacher + Dept Admin
-    students = db.query(User).filter(
+    from shared.models import PreRegisteredStudent
+    students = db.query(User).join(
+        PreRegisteredStudent, User.roll_number == PreRegisteredStudent.roll_number
+    ).filter(
         User.role == "student",
-        User.department == req.department,
-        User.section == req.section
+        PreRegisteredStudent.department == req.department,
+        PreRegisteredStudent.section == req.section
     ).all()
     dept_admin = db.query(User).filter(
         User.role == "dept_admin",
@@ -1372,26 +1375,8 @@ def check_meet_access(
                 detail=f"Faculty Notice: This online classroom ({meet.subject_name}) is assigned to Department '{meet.department}'. As a faculty member in '{getattr(current_user, 'department', 'your department')}', please select a classroom from your department schedule."
             )
     elif current_user.role == "student":
-        # Students check whitelist and enrollment section
-        if meet.allowed_users_json:
-            try:
-                allowed_ids = json.loads(meet.allowed_users_json)
-                if isinstance(allowed_ids, list) and len(allowed_ids) > 0:
-                    in_list = False
-                    for item in allowed_ids:
-                        if isinstance(item, int) and item == current_user.id:
-                            in_list = True
-                        elif isinstance(item, dict) and item.get("id") == current_user.id:
-                            in_list = True
-                    if not in_list:
-                        raise HTTPException(
-                            status_code=403,
-                            detail=f"Student Enrollment Notice: You are registered as '{current_user.full_name}' in Department '{current_user.department}', but this specific session ({meet.subject_name}) is restricted to whitelisted students for Section {meet.section}. Please verify your timetable."
-                        )
-            except HTTPException:
-                raise
-            except Exception:
-                pass
+        # Students check department and enrollment section
+
         if current_user.department != meet.department or getattr(current_user, "section", "A") != meet.section:
             raise HTTPException(
                 status_code=403,

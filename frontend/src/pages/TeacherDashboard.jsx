@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { useBranding } from '../hooks/useBranding';
-import { 
-  LogOut, User, GraduationCap, Users, LayoutGrid, AlertTriangle, 
-  Plus, Calendar, FileText, Send, CheckCircle2, MessageSquare, 
+import {
+  LogOut, User, GraduationCap, Users, LayoutGrid, AlertTriangle,
+  Plus, Calendar, FileText, Send, CheckCircle2, MessageSquare,
   ShieldAlert, BookOpen, Clock, Play, ArrowLeft, Check, AlertOctagon,
   ChevronLeft, ChevronRight, CheckSquare, Bell, ChevronDown, Cpu, Radio
 } from 'lucide-react';
@@ -15,7 +15,7 @@ import LiveProtector from '../components/LiveProtector';
 export default function TeacherDashboard() {
   const { user, logout } = useAuth();
   const { branding } = useBranding();
-  
+
   // Dashboard overall states
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -23,7 +23,7 @@ export default function TeacherDashboard() {
   const [activeClassTab, setActiveClassTab] = useState('wall'); // wall, assignments, live
   const [totalStudentsCount, setTotalStudentsCount] = useState(0);
   const [activeFlagsCount, setActiveFlagsCount] = useState(0);
-  
+
   // Orchestrator Logs State
   const [orchestratorLogs, setOrchestratorLogs] = useState([
     { time: new Date().toLocaleTimeString(), student: 'System', agent: 'Orchestrator', text: 'EngageAI Multi-Agent proctor router online.' },
@@ -33,7 +33,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const students = ['Shiva Reddy', 'Amith Reddy', 'Sneha Latha', 'Vikrant Sharma'];
     const agents = ['Alertness Agent', 'YOLO Integrity', 'Attendance Agent', 'Moderation Agent'];
-    
+
     const logs = [
       { text: 'Eye Aspect Ratio drop detected. EAR: 0.12 (Continuous drowsiness warning).', isAlert: true },
       { text: 'Prohibited object detected: Mobile phone in camera view.', isAlert: true },
@@ -47,7 +47,7 @@ export default function TeacherDashboard() {
       const student = students[Math.floor(Math.random() * students.length)];
       const agent = agents[Math.floor(Math.random() * agents.length)];
       const log = logs[Math.floor(Math.random() * logs.length)];
-      
+
       setOrchestratorLogs(prev => [
         ...prev.slice(-30),
         { time: new Date().toLocaleTimeString(), student, agent, text: log.text, isAlert: log.isAlert }
@@ -76,20 +76,20 @@ export default function TeacherDashboard() {
   const [newClassTime, setNewClassTime] = useState('');
   const [newClassDuration, setNewClassDuration] = useState('60');
   const [newClassAbsenceAllowed, setNewClassAbsenceAllowed] = useState('10');
-  
+
   // Selected Class details states
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [commentInputs, setCommentInputs] = useState({}); // postId -> commentText
-  
+
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [submissions, setSubmissions] = useState([]);
-  
+
   // Canvas SpeedGrader state
   const [activeSubIndex, setActiveSubIndex] = useState(0);
   const [gradeInputs, setGradeInputs] = useState({}); // submissionId -> gradeText
-  
+
   // Create Assignment Form states
   const [showCreateAssignModal, setShowCreateAssignModal] = useState(false);
   const [newAssignTitle, setNewAssignTitle] = useState('');
@@ -97,7 +97,7 @@ export default function TeacherDashboard() {
   const [newAssignDeadline, setNewAssignDeadline] = useState('');
   const [isMultiQuestion, setIsMultiQuestion] = useState(false);
   const [assignQuestions, setAssignQuestions] = useState(['', '', '', '', '']);
-  
+
   // Feedbacks
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
@@ -161,7 +161,7 @@ export default function TeacherDashboard() {
         { id: 106, subject_name: 'Operating Systems', section: 'A', day_of_week: 'Monday', start_time: '11:00', end_time: '12:00', room: 'Room 304' }
       ];
       setTimetableSlots(ttData);
-      
+
       // Fetch Placements
       const plcRes = await axios.get('/api/placements').catch(() => ({ data: [] }));
       setPlacements(plcRes.data.length > 0 ? plcRes.data : [
@@ -242,7 +242,7 @@ export default function TeacherDashboard() {
     try {
       const assignRes = await axios.get(`/api/academic/assignments?department=${dept}&section=${sec}&subject_name=${subName}`);
       setTimetableAssignments(assignRes.data);
-      
+
       const quizRes = await axios.get(`/api/academic/quizzes?department=${dept}&section=${sec}&subject_name=${subName}`);
       setTimetableQuizzes(quizRes.data);
     } catch (err) {
@@ -264,7 +264,7 @@ export default function TeacherDashboard() {
     setIsGenerating(true);
     try {
       const dept = user.department;
-      
+
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("department", dept);
@@ -278,7 +278,7 @@ export default function TeacherDashboard() {
       }
       formData.append("mode", assignmentMode);
       formData.append("num_questions", String(numQuestions));
-      
+
       if (assignmentMode === 'assignment' || assignmentMode === 'ai-assignment') {
         await axios.post('/api/academic/assignments/upload-post', formData, {
           headers: {
@@ -294,7 +294,7 @@ export default function TeacherDashboard() {
         });
         alert(`${assignmentMode === 'ai-quiz' ? 'AI generated quiz' : 'Quiz'} posted successfully!`);
       }
-      
+
       setSelectedFile(null);
       setUploadFileName('');
       setPostingDateTime('');
@@ -316,6 +316,10 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (user) {
       fetchClasses();
+      const intervalId = setInterval(() => {
+        fetchClasses();
+      }, 15000);
+      return () => clearInterval(intervalId);
     }
   }, [user]);
 
@@ -404,16 +408,18 @@ export default function TeacherDashboard() {
     }
 
     try {
+      const currentTimeStr = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+      
       // 1. Create general classroom entry
-      const clsRes = await axios.post('/api/classes', { 
-        name: `${user.department} - Section ${newClassName} - ${newClassSubject}`, 
+      const clsRes = await axios.post('/api/classes', {
+        name: `${user.department} - Section ${newClassName} - ${newClassSubject}`,
         department: user.department,
         section: newClassName,
         absence_allowed_mins: absenceAllowed,
         description: newClassDesc || `Live session for ${newClassSubject}`,
         subject_name: newClassSubject,
         meet_date: newClassDate || new Date().toISOString().split('T')[0],
-        start_time: newClassTime || '10:00',
+        start_time: newClassTime || currentTimeStr,
         duration_mins: duration
       });
 
@@ -425,7 +431,7 @@ export default function TeacherDashboard() {
           subject_name: newClassSubject,
           topic: newClassDesc || `${newClassSubject} - Virtual Classroom`,
           meet_date: newClassDate || new Date().toISOString().split('T')[0],
-          start_time: newClassTime || '10:00',
+          start_time: newClassTime || currentTimeStr,
           duration_mins: duration,
           absence_limit_mins: absenceAllowed,
           camera_mandatory: true
@@ -534,17 +540,17 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-      
+
       {/* LEFT SIDEBAR: MeritCurve Style for Teacher */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between select-none fixed h-screen overflow-y-auto">
         <div>
           {/* Logo brand */}
           <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-            <img 
-              src={branding.logo_url} 
-              className="h-8 w-auto object-contain max-w-[40px]" 
-              onError={(e) => { e.target.style.display = 'none'; }} 
-              alt="Logo" 
+            <img
+              src={branding.logo_url}
+              className="h-8 w-auto object-contain max-w-[40px]"
+              onError={(e) => { e.target.style.display = 'none'; }}
+              alt="Logo"
             />
             <div>
               <h2 className="font-extrabold text-sm text-slate-900 tracking-tight leading-none truncate max-w-[120px]">{branding.institution_name}</h2>
@@ -559,11 +565,10 @@ export default function TeacherDashboard() {
               <nav className="space-y-1">
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('dashboard'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'dashboard' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'dashboard' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                   Dashboard Overview
@@ -576,66 +581,60 @@ export default function TeacherDashboard() {
               <nav className="space-y-1">
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('courses'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'courses' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'courses' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <BookOpen className="h-4 w-4" />
                   Online Class Feed
                 </button>
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('academic'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'academic' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'academic' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <FileText className="h-4 w-4" />
                   Academics & Syllabus
                 </button>
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('timetable'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'timetable' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'timetable' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Calendar className="h-4 w-4" />
                   My Schedule
                 </button>
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('assignments-quizzes'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'assignments-quizzes' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'assignments-quizzes' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <FileText className="h-4 w-4" />
                   Assignments & Quizzes
                 </button>
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('placements'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'placements' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'placements' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Users className="h-4 w-4" />
                   Placements
                 </button>
                 <button
                   onClick={() => { setSelectedClass(null); setActiveMenu('notifications'); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeMenu === 'notifications' && !selectedClass
-                      ? 'bg-brand-50 text-brand-600' 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeMenu === 'notifications' && !selectedClass
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-slate-655 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Bell className="h-4 w-4" />
                   Announcements
@@ -647,7 +646,7 @@ export default function TeacherDashboard() {
 
         {/* Sidebar Footer Log out */}
         <div className="p-4 border-t border-slate-100">
-          <button 
+          <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all"
           >
@@ -659,7 +658,7 @@ export default function TeacherDashboard() {
 
       {/* RIGHT MAIN WORKSPACE */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden ml-64">
-        
+
         {/* Top Header navbar with Dropdown */}
         <header className="bg-white border-b border-slate-200 h-16 px-8 flex justify-between items-center relative z-20">
           <div className="flex items-center gap-3">
@@ -668,7 +667,7 @@ export default function TeacherDashboard() {
 
           <div className="flex items-center gap-4">
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowNotifMenu(!showNotifMenu)}
                 className="p-2 text-slate-500 hover:text-slate-800 transition-colors relative focus:outline-none"
               >
@@ -690,17 +689,16 @@ export default function TeacherDashboard() {
                       <p className="text-[10px] text-slate-400 font-bold text-center py-4">No notifications.</p>
                     ) : (
                       notificationsList.map(n => (
-                        <div 
-                          key={n.id} 
+                        <div
+                          key={n.id}
                           onClick={() => { handleMarkNotificationRead(n.id); setShowNotifMenu(false); }}
-                          className={`p-2.5 rounded-xl border text-[10px] cursor-pointer transition-colors leading-normal ${
-                            n.is_read 
-                              ? 'bg-slate-50 border-slate-100 text-slate-500' 
+                          className={`p-2.5 rounded-xl border text-[10px] cursor-pointer transition-colors leading-normal ${n.is_read
+                              ? 'bg-slate-50 border-slate-100 text-slate-500'
                               : 'bg-blue-50/40 border-blue-100 text-slate-850 font-semibold'
-                          }`}
+                            }`}
                         >
                           <p>{n.message}</p>
-                          <span className="text-[8px] text-slate-400 block mt-1">{new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          <span className="text-[8px] text-slate-400 block mt-1">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       ))
                     )}
@@ -708,10 +706,10 @@ export default function TeacherDashboard() {
                 </div>
               )}
             </div>
-            
+
             {/* User Dropdown trigger */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2 focus:outline-none select-none hover:opacity-85 transition-opacity"
               >
@@ -737,7 +735,7 @@ export default function TeacherDashboard() {
                   </div>
 
                   <div className="space-y-1">
-                    <button 
+                    <button
                       onClick={() => { setShowProfileMenu(false); setShowProfileModal(true); }}
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-2"
                     >
@@ -747,7 +745,7 @@ export default function TeacherDashboard() {
                   </div>
 
                   <div className="border-t border-slate-100 pt-2">
-                    <button 
+                    <button
                       onClick={logout}
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
                     >
@@ -776,7 +774,7 @@ export default function TeacherDashboard() {
               {/* Back button and Class header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
                 <div className="flex items-center gap-4">
-                  <button 
+                  <button
                     onClick={() => setSelectedClass(null)}
                     className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs font-bold"
                   >
@@ -807,10 +805,10 @@ export default function TeacherDashboard() {
 
               {/* Dedicated Live Proctor and Launch Meeting Interface */}
               <div className="mt-2">
-                <LiveProtector 
-                  classData={selectedClass} 
-                  isHost={true} 
-                  onLeave={() => setSelectedClass(null)} 
+                <LiveProtector
+                  classData={selectedClass}
+                  isHost={true}
+                  onLeave={() => setSelectedClass(null)}
                 />
               </div>
             </div>
@@ -890,9 +888,8 @@ export default function TeacherDashboard() {
                             <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                               <div className="flex justify-between items-start mb-2">
                                 <h4 className="font-bold text-xs text-slate-800">{ann.title}</h4>
-                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${
-                                  ann.priority === 'High' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                                }`}>{ann.priority}</span>
+                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${ann.priority === 'High' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                                  }`}>{ann.priority}</span>
                               </div>
                               <p className="text-[10px] text-slate-605 leading-normal">{ann.content}</p>
                               <span className="text-[9px] text-slate-400 mt-2 block">{ann.date}</span>
@@ -921,7 +918,7 @@ export default function TeacherDashboard() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                       <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight">Online Class Feed</h3>
-                      <button 
+                      <button
                         onClick={() => setShowCreateModal(true)}
                         className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-[10px] px-3.5 py-2 rounded-xl transition-all shadow-md uppercase tracking-wider"
                       >
@@ -934,7 +931,7 @@ export default function TeacherDashboard() {
                       <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 text-xs">
                         <p className="font-bold text-slate-800 mb-1">No classrooms created yet</p>
                         <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto">Create a class to host stream channels, open classwork walls, and monitor plagiarism.</p>
-                        <button 
+                        <button
                           onClick={() => setShowCreateModal(true)}
                           className="bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all"
                         >
@@ -943,8 +940,15 @@ export default function TeacherDashboard() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {classes.filter(cls => cls.status !== 'completed').map((cls) => (
-                          <div 
+                        {classes.filter(cls => {
+                          if (cls.status === 'completed') return false;
+                          if (!cls.meet_date || !cls.start_time) return true;
+                          const targetStr = `${cls.meet_date}T${cls.start_time.length === 5 ? cls.start_time + ':00' : cls.start_time}`;
+                          const targetTime = new Date(targetStr).getTime();
+                          if (isNaN(targetTime)) return true;
+                          return (targetTime - new Date().getTime()) >= -((cls.duration_mins || 60) * 60 * 1000);
+                        }).map((cls) => (
+                          <div
                             key={cls.id}
                             className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-slate-350 transition-all duration-300 flex flex-col justify-between min-h-[160px]"
                           >
@@ -1061,65 +1065,65 @@ export default function TeacherDashboard() {
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                     <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Your Assigned Lecture Schedule</h3>
                     <p className="text-slate-500 text-xs mt-1">Click on any class card to take manual student attendance for that slot.</p>
-                                    {/* 3-Column Schedule Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {(() => {
-                      const daysOfWeekList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                      let currentDay = daysOfWeekList[new Date().getDay()];
-                      const isWeekend = currentDay === 'Saturday' || currentDay === 'Sunday';
-                      if (isWeekend) {
-                        currentDay = 'Monday';
-                      }
-                      const filteredSlots = timetableSlots
-                        .filter(s => s.day_of_week === currentDay)
-                        .sort((a, b) => a.start_time.localeCompare(b.start_time));
-                      
-                      return (
-                        <>
-                          {isWeekend && (
-                            <div className="col-span-3 bg-amber-50 border border-amber-200 text-amber-800 p-4.5 rounded-2xl text-xs font-semibold">
-                              ℹ️ Today is a weekend. Showing Monday's lecture schedule:
-                            </div>
-                          )}
-                          {filteredSlots.map((slot) => (
-                            <div 
-                              key={slot.id} 
-                              onClick={() => handleOpenAttendance(slot)}
-                              className="bg-white border border-slate-200 hover:border-brand-500 hover:shadow-lg rounded-2xl p-6 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[145px] animate-fadeIn group"
-                            >
-                              <div>
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-brand-50 text-brand-650 uppercase tracking-wider">
-                                    Section {slot.section}
-                                  </span>
-                                  <span className="text-[10px] text-slate-400 font-bold uppercase">
-                                    {slot.day_of_week}
+                    {/* 3-Column Schedule Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(() => {
+                        const daysOfWeekList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        let currentDay = daysOfWeekList[new Date().getDay()];
+                        const isWeekend = currentDay === 'Saturday' || currentDay === 'Sunday';
+                        if (isWeekend) {
+                          currentDay = 'Monday';
+                        }
+                        const filteredSlots = timetableSlots
+                          .filter(s => s.day_of_week === currentDay)
+                          .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+                        return (
+                          <>
+                            {isWeekend && (
+                              <div className="col-span-3 bg-amber-50 border border-amber-200 text-amber-800 p-4.5 rounded-2xl text-xs font-semibold">
+                                ℹ️ Today is a weekend. Showing Monday's lecture schedule:
+                              </div>
+                            )}
+                            {filteredSlots.map((slot) => (
+                              <div
+                                key={slot.id}
+                                onClick={() => handleOpenAttendance(slot)}
+                                className="bg-white border border-slate-200 hover:border-brand-500 hover:shadow-lg rounded-2xl p-6 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[145px] animate-fadeIn group"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-brand-50 text-brand-650 uppercase tracking-wider">
+                                      Section {slot.section}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                      {slot.day_of_week}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-extrabold text-xs text-slate-900 group-hover:text-brand-650 transition-colors leading-tight">
+                                    {slot.subject_name}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1 font-semibold">
+                                    <Clock className="h-3.5 w-3.5 text-slate-400" /> {slot.start_time} - {slot.end_time}
+                                  </p>
+                                </div>
+                                <div className="border-t border-slate-100 pt-3 mt-3.5 flex items-center justify-between">
+                                  <span className="text-[9px] text-slate-450 font-bold uppercase">{slot.department} Department</span>
+                                  <span className="text-[10px] text-brand-600 font-bold hover:underline flex items-center gap-1">
+                                    Take Attendance &rarr;
                                   </span>
                                 </div>
-                                <h4 className="font-extrabold text-xs text-slate-900 group-hover:text-brand-650 transition-colors leading-tight">
-                                  {slot.subject_name}
-                                </h4>
-                                <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1 font-semibold">
-                                  <Clock className="h-3.5 w-3.5 text-slate-400" /> {slot.start_time} - {slot.end_time}
-                                </p>
                               </div>
-                              <div className="border-t border-slate-100 pt-3 mt-3.5 flex items-center justify-between">
-                                <span className="text-[9px] text-slate-450 font-bold uppercase">{slot.department} Department</span>
-                                <span className="text-[10px] text-brand-600 font-bold hover:underline flex items-center gap-1">
-                                  Take Attendance &rarr;
-                                </span>
+                            ))}
+                            {filteredSlots.length === 0 && (
+                              <div className="col-span-3 bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-550 text-xs shadow-sm">
+                                No classes scheduled for today ({currentDay}).
                               </div>
-                            </div>
-                          ))}
-                          {filteredSlots.length === 0 && (
-                            <div className="col-span-3 bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-550 text-xs shadow-sm">
-                              No classes scheduled for today ({currentDay}).
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>  </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>  </div>
 
                   {/* Secondary Weekly Matrix View */}
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-x-auto mt-6">
@@ -1139,41 +1143,41 @@ export default function TeacherDashboard() {
                             <td className="border border-slate-100 px-4 py-4 font-bold text-slate-900 text-left bg-slate-50/30">{day}</td>
                             {slotsTimeRange.map((st) => {
                               if (st.isLunch) {
-                                  return (
-                                    <td key={st.label} className="border border-slate-100 px-4 py-4 bg-amber-50/45 text-amber-700 font-extrabold italic select-none">
-                                      Lunch Break
-                                    </td>
-                                  );
-                                }
-                                const slot = timetableSlots.find(s => s.day_of_week === day && s.start_time === st.start);
                                 return (
-                                  <td key={st.label} className="border border-slate-100 px-2 py-3 min-w-[140px]">
-                                    {slot ? (
-                                      <div className="space-y-0.5 bg-brand-50/50 p-2 rounded-xl border border-brand-100 cursor-pointer" onClick={() => handleOpenAttendance(slot)}>
-                                        <p className="font-extrabold text-slate-850 text-[10px] leading-tight">{slot.subject_name}</p>
-                                        <p className="text-[8.5px] text-brand-600 font-black uppercase">Section {slot.section}</p>
-                                      </div>
-                                    ) : (
-                                      <span className="text-slate-350 italic text-[9.5px]">Free</span>
-                                    )}
+                                  <td key={st.label} className="border border-slate-100 px-4 py-4 bg-amber-50/45 text-amber-700 font-extrabold italic select-none">
+                                    Lunch Break
                                   </td>
                                 );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                              }
+                              const slot = timetableSlots.find(s => s.day_of_week === day && s.start_time === st.start);
+                              return (
+                                <td key={st.label} className="border border-slate-100 px-2 py-3 min-w-[140px]">
+                                  {slot ? (
+                                    <div className="space-y-0.5 bg-brand-50/50 p-2 rounded-xl border border-brand-100 cursor-pointer" onClick={() => handleOpenAttendance(slot)}>
+                                      <p className="font-extrabold text-slate-850 text-[10px] leading-tight">{slot.subject_name}</p>
+                                      <p className="text-[8.5px] text-brand-600 font-black uppercase">Section {slot.section}</p>
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-350 italic text-[9.5px]">Free</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
+              )}
 
               {/* MENU F: ASSIGNMENTS & QUIZZES VIEW */}
               {activeMenu === 'assignments-quizzes' && (() => {
                 const uniqueSections = Array.from(new Set(timetableSlots.map(s => s.section))).sort();
-                const uniqueSubjects = selectedSection 
+                const uniqueSubjects = selectedSection
                   ? Array.from(new Set(timetableSlots.filter(s => s.section === selectedSection).map(s => s.subject_name))).sort()
                   : [];
-                
+
                 return (
                   <div className="space-y-6 animate-fadeIn">
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1181,7 +1185,7 @@ export default function TeacherDashboard() {
                         <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Assignments & Quizzes Console</h3>
                         <p className="text-slate-500 text-xs mt-1">Scope tasks by section and subject, upload documents, and generate quizzes using AI.</p>
                       </div>
-                      
+
                       {/* Section Selector */}
                       <div className="flex items-center gap-3 bg-slate-50 border border-slate-150 p-2.5 rounded-2xl">
                         <label className="text-[10px] font-bold text-slate-505 uppercase tracking-wider">Select Section:</label>
@@ -1208,11 +1212,10 @@ export default function TeacherDashboard() {
                               <div
                                 key={subName}
                                 onClick={() => setSelectedSubject(subName)}
-                                className={`p-4 rounded-2xl border cursor-pointer transition-all shadow-sm ${
-                                  selectedSubject === subName
+                                className={`p-4 rounded-2xl border cursor-pointer transition-all shadow-sm ${selectedSubject === subName
                                     ? 'border-brand-600 bg-brand-50/15'
                                     : 'border-slate-200 bg-white hover:bg-slate-50'
-                                }`}
+                                  }`}
                               >
                                 <h4 className="font-extrabold text-xs text-slate-900 leading-tight">{subName}</h4>
                                 <span className="text-[9px] text-brand-600 font-bold uppercase block mt-1.5">Section {selectedSection}</span>
@@ -1583,8 +1586,8 @@ export default function TeacherDashboard() {
                 </div>
               )}
               <div className="flex justify-end gap-3 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowCreateModal(false)}
                   className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-slate-600 text-xs hover:bg-slate-100 transition-all"
                 >
@@ -1617,8 +1620,8 @@ export default function TeacherDashboard() {
                 />
               </div>
               <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="multiQuestionToggle"
                   checked={isMultiQuestion}
                   onChange={(e) => setIsMultiQuestion(e.target.checked)}
@@ -1669,8 +1672,8 @@ export default function TeacherDashboard() {
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowCreateAssignModal(false)}
                   className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-slate-600 text-xs hover:bg-slate-100 transition-all"
                 >
@@ -1697,7 +1700,7 @@ export default function TeacherDashboard() {
                   {selectedSlotForAttendance.subject_name} — Section {selectedSlotForAttendance.section} ({selectedSlotForAttendance.start_time} - {selectedSlotForAttendance.end_time})
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAttendanceModal(false)}
                 className="text-slate-400 hover:text-slate-700 text-lg font-bold"
               >
@@ -1753,30 +1756,28 @@ export default function TeacherDashboard() {
                       <h4 className="font-extrabold text-xs text-slate-800">{student.student_name}</h4>
                       <span className="text-[9px] text-slate-400 font-mono block mt-0.5">{student.roll_number}</span>
                     </div>
-                    
+
                     {/* Switch/Checkbox */}
                     <div className="flex items-center gap-3">
-                      <span className={`text-[9px] font-extrabold uppercase px-2 py-1 rounded-md border ${
-                        student.status === 'Present' 
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                      <span className={`text-[9px] font-extrabold uppercase px-2 py-1 rounded-md border ${student.status === 'Present'
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                           : 'bg-red-50 border-red-200 text-red-700'
-                      }`}>
+                        }`}>
                         {student.status}
                       </span>
                       <button
                         type="button"
                         onClick={() => {
-                          setAttendanceRoster(attendanceRoster.map(r => 
-                            r.student_id === student.student_id 
-                              ? { ...r, status: r.status === 'Present' ? 'Absent' : 'Present' } 
+                          setAttendanceRoster(attendanceRoster.map(r =>
+                            r.student_id === student.student_id
+                              ? { ...r, status: r.status === 'Present' ? 'Absent' : 'Present' }
                               : r
                           ));
                         }}
-                        className={`font-semibold text-xs border px-3.5 py-1.5 rounded-xl transition-all ${
-                          student.status === 'Present'
+                        className={`font-semibold text-xs border px-3.5 py-1.5 rounded-xl transition-all ${student.status === 'Present'
                             ? 'bg-red-50 text-red-650 hover:bg-red-100 border-red-200'
                             : 'bg-emerald-50 text-emerald-650 hover:bg-emerald-100 border-emerald-200'
-                        }`}
+                          }`}
                       >
                         Mark {student.status === 'Present' ? 'Absent' : 'Present'}
                       </button>
@@ -1787,14 +1788,14 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 mt-4">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowAttendanceModal(false)}
                 className="bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-xl text-slate-650 text-xs hover:bg-slate-100 transition-all font-bold"
               >
                 Close
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={handleSaveAttendance}
                 disabled={isSavingAttendance || attendanceRoster.length === 0}
@@ -1809,10 +1810,10 @@ export default function TeacherDashboard() {
       )}
 
       {/* Profile Modal */}
-      <ProfileModal 
-        user={user} 
-        isOpen={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
+      <ProfileModal
+        user={user}
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </div>
   );

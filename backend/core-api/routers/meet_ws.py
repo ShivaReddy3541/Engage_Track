@@ -80,10 +80,15 @@ async def websocket_endpoint(
         await websocket.close(code=1008, reason="Meeting not found")
         return
         
-    allowed_users = json.loads(meet.allowed_users_json or "[]")
-    if user.id not in allowed_users:
-        await websocket.close(code=1008, reason="Not authorized for this meeting")
-        return
+    if user.role == "student":
+        user_section = getattr(user, "section", "A")
+        if user.department != meet.department or user_section != meet.section:
+            await websocket.close(code=1008, reason="Not authorized for this meeting section")
+            return
+    elif user.role == "teacher":
+        if meet.teacher_id and meet.teacher_id not in [1, 0, user.id] and meet.department != getattr(user, "department", meet.department):
+            await websocket.close(code=1008, reason="Not authorized for this department meeting")
+            return
 
     # Handle session tracking
     session_record = db.query(OnlineMeetSession).filter(

@@ -30,19 +30,30 @@ export default function HelpChatbot() {
 
   const getAIResponse = (input) => {
     const text = input.toLowerCase();
+    
+    // Rule 1: Credentials
     if (text.includes('admin') || text.includes('password') || text.includes('credential')) {
       return "🛡️ Secure Administrator Access:\n• For security compliance, Administrator credentials are NOT disclosed publicly by this support chatbot.\n• Please reference your secure local database configuration or contact your system administrator for access permissions.";
     }
+    
+    // Rule 2: Online Meetings step-by-step
+    if (text.includes('meeting') || text.includes('meet') || text.includes('live')) {
+      return "Where to find Online Meetings:\n1. Please log in to your account.\n2. Go to the Student Portal (or Teacher Dashboard).\n3. Click on 'Online Meets' in the navigation menu.\n4. You will see your scheduled active classes there!";
+    }
+
+    // Rule 3: General project features
     if (text.includes('student') || text.includes('signup') || text.includes('roll')) {
-      return "🎓 Student Registration Steps:\n1. Click 'Create an account' at the bottom of the login card.\n2. Choose 'Student' as the role.\n3. Fill in your Name, Email, and Password.\n4. No roll number is required right now! Click register and log in instantly.";
+      return "🎓 Student Registration Steps:\n1. Click 'Create an account' at the bottom of the login card.\n2. Choose 'Student' as the role.\n3. Fill in your Name, Email, and Password.\n4. Click register and log in instantly.";
     }
     if (text.includes('teacher') || text.includes('approve') || text.includes('reject') || text.includes('pending')) {
-      return "👨‍🏫 Teacher Approval Process:\n• Teachers can register freely but start in a 'Pending Verification' state.\n• They are blocked from logging in until approved.\n• To approve them: Log in as Admin, find the teacher in the 'Teacher Approval Queue' table, and click 'Approve'. They can then log in immediately.";
+      return "👨‍🏫 Teacher Approval Process:\n• Teachers can register freely but start in a 'Pending Verification' state.\n• To approve them: Log in as Admin, find the teacher in the 'Teacher Approval Queue', and click 'Approve'.";
     }
-    if (text.includes('plagiarism') || text.includes('similarity') || text.includes('grade') || text.includes('homework')) {
-      return "📝 Plagiarism & Grading System:\n• Students can upload text-based homework for assignments.\n• The backend runs a custom cosine-similarity engine comparing their upload against previous submissions.\n• Teachers can review the submission, inspect the similarity percentage, and enter grades (A+, 95, etc.) in the grading drawer.";
+    if (text.includes('plagiarism') || text.includes('similarity') || text.includes('grade')) {
+      return "📝 Plagiarism & Grading System:\n• Students upload text-based homework.\n• The backend runs a custom cosine-similarity engine comparing it against previous submissions.\n• Teachers can review the similarity percentage and enter grades.";
     }
-    return "🤖 I can help you with specific steps! Try asking about:\n• 'How to register a student'\n• 'How to approve/reject teachers'\n• 'Plagiarism checks'";
+
+    // Rule 4: Strict off-topic rejection
+    return "Please ask questions only related to the application.";
   };
 
   const handleSendMessage = async (textToSend) => {
@@ -59,11 +70,7 @@ export default function HelpChatbot() {
     setInputText('');
     setIsTyping(true);
 
-    setIsTyping(true);
-
     try {
-      // Import axios if not imported at top, but since we are modifying just this block, let's use fetch or axios globally.
-      // Wait, axios is not imported in HelpChatbot.jsx! Let me just use fetch here to avoid adding an import if I don't change the top of the file.
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,10 +78,12 @@ export default function HelpChatbot() {
       });
       const data = await res.json();
       
+      const responseText = data.response || getAIResponse(textToSend);
+      
       const newBotMessage = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: data.response || "Sorry, I am having trouble connecting.",
+        text: responseText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, newBotMessage]);

@@ -36,7 +36,7 @@ export default function AIProctorAgent({ videoRef, isHostOrAdmin, onViolation, i
     if (!modelsLoaded || isHostOrAdmin || !isActive || !videoRef?.current) return;
 
     const analyzeVideo = async () => {
-      if (videoRef.current.paused || videoRef.current.ended) return;
+      if (videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState !== 4) return;
 
       try {
         const detections = await window.faceapi.detectAllFaces(
